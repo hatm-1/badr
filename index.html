@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5bd8">
+<title>مراجع الرسم</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--surface:#fff;--ink:#1d232a;--mute:#66707b;--line:#cfd6dd;--accent:#2f5bd8;--accent-ink:#fff;--gold:#d99a00;--pin:#c8232c}
+@media (prefers-color-scheme:dark){:root{--bg:#171b20;--surface:#222830;--ink:#eef1f4;--mute:#99a3ae;--line:#38414b;--accent:#7f9cff;--accent-ink:#10141a;--gold:#f0b429;--pin:#ff6b73}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",Tahoma,system-ui,sans-serif;line-height:1.6;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+main{max-width:760px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:26px;margin:4px 0 14px}
+h2{margin:0 0 6px;font-size:22px}
+.note{color:var(--mute);font-size:14px;margin:0 0 14px}
+.row{display:flex;gap:8px;margin-bottom:12px}
+input{flex:1;min-width:0;font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+button{font:inherit;cursor:pointer;color:var(--ink)}
+.btn{padding:10px 18px;border:0;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{flex:1;padding:10px;border:0;border-bottom:3px solid var(--line);background:none;font-weight:600;color:var(--mute)}
+.tabs button[aria-pressed="true"]{border-color:var(--accent);color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.cat{padding:16px 14px;text-align:right;border:1.5px solid var(--line);border-radius:12px;background:var(--surface);font-weight:700;font-size:17px}
+.cat small{display:block;font-weight:400;color:var(--mute);font-size:13px}
+.cat .pin{color:var(--pin);font-weight:600}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.back{border:0;background:none;color:var(--accent);font-weight:600;padding:4px 0;margin-bottom:8px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:flex;align-items:stretch;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+.chip>a,.chip>button.m{padding:10px 14px;color:var(--ink);text-decoration:none;border:0;background:none}
+.chip>a.pinl{color:var(--pin)}
+.chip>button.x{border:0;border-right:1px solid var(--line);background:none;padding:0 10px;color:var(--mute)}
+.pinbox{padding:10px 14px;margin-bottom:14px;border:1.5px solid var(--pin);border-radius:10px;color:var(--pin);font-size:14px}
+.add{margin-top:20px;padding:14px;border:1.5px dashed var(--line);border-radius:12px}
+.add p{margin:0 0 8px;font-weight:600}
+.add .row{margin:0}
+.del{margin-top:14px;border:0;background:none;color:#c0392b;font-weight:600}
+.wall{column-count:2;column-gap:8px}
+@media(min-width:620px){.wall{column-count:3}}
+.wall button{display:block;width:100%;margin:0 0 8px;padding:0;border:0;border-radius:10px;overflow:hidden;background:var(--line);break-inside:avoid}
+.wall img{display:block;width:100%;height:auto;min-height:80px}
+.msg{color:var(--mute);padding:20px 0;text-align:center}
+.more{display:flex;margin:14px auto 0}
+#lb{position:fixed;inset:0;background:rgba(10,12,15,.94);z-index:20;display:flex;flex-direction:column;padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px))}
+#lb[hidden]{display:none}
+#lb img{flex:1;min-height:0;width:100%;object-fit:contain}
+#lb .bar{display:flex;gap:8px;justify-content:center;padding-top:10px}
+#lb .bar>*{flex:1;max-width:160px;padding:10px;border:0;border-radius:10px;background:#2c333b;color:#fff;text-align:center;text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+<h1>مراجع الرسم</h1>
+<div class="row">
+<input id="q" type="search" placeholder="ابحث عن أي شيء بالإنجليزي… مثلاً: samurai" enterkeyhint="search">
+<button class="btn" id="go" type="button">بحث</button>
+</div>
+<div class="tabs" role="group">
+<button type="button" id="t1">التصنيفات</button>
+<button type="button" id="t2">المفضلة ★</button>
+</div>
+<div id="view"></div>
+</main>
+<div id="lb" hidden>
+<img id="lbimg" alt="">
+<div class="bar"><button type="button" id="lbfav"></button><a id="lblink" target="_blank" rel="noopener noreferrer">المصدر</a><button type="button" id="lbx">إغلاق</button></div>
+</div>
+
+<script>
+/* ===== الإعدادات: حط مفتاح Pixabay هنا بين علامتي التنصيص ===== */
+var PIXABAY_KEY = "";
+var PEXELS_KEY = "";
+/* بدون مفتاح، الصور الحقيقية تجي من Wikimedia بدل Pexels */
+
+var PIN="https://www.pinterest.com/search/pins/?q=";
+// المصادر: px=Pexels  sb=Safebooru (أنمي)  ac=متحف شيكاغو  wk=ويكيميديا  pin=بنترست
+var CATS=[
+{n:"أنواع الرسم",d:"كاركتر، مانجا، كونسبت",src:"pin",s:[["رسم كاركتر","character design reference"],["رسم واقعي","realistic portrait drawing"],["مانجا","manga art reference"],["كرتون","cartoon art style"],["ديجيتال","digital painting art"],["رسم رصاص","pencil sketch drawing"],["ألوان مائية","watercolor illustration"],["ماركر","marker illustration"],["بكسل آرت","pixel art character"],["كونسبت آرت","concept art"],["لاين آرت","line art illustration"],["ستايلايزد","stylized character art"]]},
+{n:"أجسام ووضعيات",d:"ميلان، حركة، جلوس",src:"px",s:[["جسم مايل","leaning against wall"],["وضعية حركة","dynamic pose"],["جلوس","person sitting"],["جري","running"],["وقفة قتال","martial arts stance"],["قفز","jumping"],["تمدد","lying down"],["ظهر","person back view"],["شخصين معًا","couple pose"],["مشي","walking"],["رقص","dancer pose"],["تمدد عضلات","athlete stretching"],["رفع اليد","person reaching up"],["جلوس القرفصاء","crouching"],["زاوية من تحت","person from below angle"]]},
+{n:"أنمي",d:"شخصيات ووضعيات",src:"sb",s:[["ناروتو","naruto_(series) solo"],["ون بيس","one_piece solo"],["هجوم العمالقة","shingeki_no_kyojin solo"],["قاتل الشياطين","kimetsu_no_yaiba solo"],["جوجتسو كايسن","jujutsu_kaisen solo"],["دراجون بول","dragon_ball solo"],["ديث نوت","death_note solo"],["بليتش","bleach_(series) solo"],["هنتر × هنتر","hunter_x_hunter solo"],["تشينسو مان","chainsaw_man solo"],["ماي هيرو","boku_no_hero_academia solo"],["أنمي بنات","1girl solo"],["أنمي أولاد","1boy solo"],["وقفة قتال","fighting_stance solo"],["جلوس","sitting solo"],["جري","running solo"],["قفز","jumping solo"],["من تحت","from_below solo"],["اختصار المنظور","foreshortening solo"],["غضب","angry solo"],["بكاء","crying solo"]]},
+{n:"مسلسلات وأفلام",d:"شخصيات وكادرات",src:"pin",s:[["مارفل","Marvel character reference"],["دي سي","DC character reference"],["كادرات سينمائية","cinematic film still"],["ستار وورز","Star Wars character reference"],["أبطال خارقين","superhero pose reference"],["شخصية شريرة","villain character design"],["محارب","warrior character design"],["بيكي بلايندرز","Peaky Blinders character"],["صراع العروش","Game of Thrones character"],["ديزني","Disney character art"],["بيكسار","Pixar character art"],["سبايدر مان","Spider-Man pose reference"],["باتمان","Batman art"]]},
+{n:"كرتون وسكتش",d:"تشيبي، كاريكاتير",src:"pin",s:[["سكتش كرتون","cartoon character sketch"],["تشيبي","chibi character reference"],["كاريكاتير","caricature drawing"],["قصص مصورة","comic panel layout"],["ستوري بورد","storyboard sketch"],["موديل شيت","character model sheet"],["رسم سريع","gesture drawing"],["كرتون قديم","vintage cartoon style"],["حيوان كرتوني","cartoon animal character"],["مخلوق كرتوني","cartoon monster design"]]},
+{n:"وجوه ومشاعر",d:"تعابير وزوايا",src:"px",s:[["تعابير الوجه","facial expression"],["وجه جانبي","face profile"],["ثلاثة أرباع","portrait three quarter"],["عيون","eye close up"],["شفايف","lips close up"],["غضب","angry face"],["بكاء","crying face"],["ضحك","laughing face"],["شعر","hair close up"],["مفاجأة","surprised face"],["وجه من تحت","face from below"],["بورتريه رجل","man portrait"],["بورتريه امرأة","woman portrait"]]},
+{n:"أيدي وأقدام",d:"أصعب شيء في الرسم",src:"px",s:[["أيدي","hands"],["قبضة","fist"],["إمساك شيء","hand holding object"],["أصابع","fingers"],["أقدام","bare feet"],["يد تشير","pointing hand"],["يدين متشابكة","clasped hands"],["حركات اليد","hand gesture"]]},
+{n:"ملابس وأزياء",d:"طيّات، دروع، أزياء",src:"px",s:[["طيّات القماش","fabric folds"],["هودي","hoodie"],["ثوب وشماغ","traditional thobe"],["زي مدرسي","school uniform"],["كيمونو","kimono"],["جاكيت","leather jacket"],["ستريت وير","streetwear"],["قماش منسدل","draped fabric"],["دروع","medieval armour","wk"],["ملابس تاريخية","historical costume","wk"]]},
+{n:"حيوانات",d:"تشريح وحركة",src:"px",s:[["قطط","cat"],["كلاب","dog"],["خيل","horse running"],["صقر","falcon"],["ذئب","wolf"],["أسد","lion"],["جمل","camel"],["نمر","tiger"],["ثعلب","fox"],["نسر طائر","eagle flying"],["تنين","dragon concept art","pin"]]},
+{n:"مناظر وخلفيات",d:"مدن وطبيعة",src:"px",s:[["مدينة ليلية","night city"],["صحراء","desert landscape"],["غرفة داخلية","room interior"],["غروب","sunset sky"],["غابة","forest"],["شارع","city street"],["سطح مبنى","rooftop"],["جبال","mountains"],["خلفية أنمي","anime background art","pin"],["مدينة مستقبلية","futuristic city concept art","pin"]]},
+{n:"إضاءة وظلال",d:"ألوان ومزاج",src:"px",s:[["إضاءة درامية","dramatic lighting portrait"],["ظل ونور","silhouette"],["ضوء خلفي","rim light portrait"],["إضاءة نيون","neon lights"],["ضوء الشمس","sunlight portrait"],["ضوء القمر","moonlight"],["ظلال الوجه","shadow on face"]]},
+{n:"روبوتات وميكا",d:"آلات وخيال علمي",src:"pin",s:[["ميكا","mecha design"],["روبوت","robot concept art"],["سيارات مستقبلية","futuristic vehicle concept"],["أسلحة خيالية","fantasy weapon design"],["سايبورغ","cyborg character design"],["سفينة فضاء","spaceship concept art"],["بدلة فضاء","space suit design"]]},
+{n:"لوحات ودراسات كلاسيكية",d:"من المتاحف",src:"ac",s:[["دراسة جسم","figure study"],["طيّات القماش","drapery"],["دراسة أيدي","hands study"],["بورتريه","portrait"],["تشريح","anatomy study"],["تماثيل","sculpture figure"],["خيل","horse"],["محارب","warrior"],["راقصة","dancer"],["مناظر","landscape"]]}
+];
+
+var S={fav:[],custom:[],extra:{}};
+try{var raw=localStorage.getItem("refsite");if(raw){var p=JSON.parse(raw);if(p&&typeof p==="object")for(var k in S)if(p[k]!==undefined)S[k]=p[k]}}catch(e){}
+function save(){try{localStorage.setItem("refsite",JSON.stringify(S))}catch(e){}}
+var $=function(i){return document.getElementById(i)};
+var enc=encodeURIComponent;
+function el(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+var tab="cats",cur=null,res=null,token=0;
+
+function allCats(){
+ return CATS.map(function(c){return {n:c.n,d:c.d,src:c.src,s:c.s.concat((S.extra[c.n]||[]).map(function(o){return o.concat([])})),base:c.s.length}})
+  .concat(S.custom.map(function(c){return {n:c.n,d:"تصنيفك",src:"px",s:c.s,base:-1}}));
+}
+function stock(){return PEXELS_KEY?"px":(PIXABAY_KEY?"pb":"wk")}
+function srcOf(c,o){var s=o[2]||c.src;if(s==="px")s=stock();return s}
+
+/* ===== جلب الصور ===== */
+async function getJSON(u,h){var r=await fetch(u,h?{headers:h}:undefined);if(!r.ok)throw new Error(r.status);return r.json()}
+async function load(src,q,page){
+ if(src==="px"){
+  var j=await getJSON("https://api.pexels.com/v1/search?per_page=30&page="+page+"&query="+enc(q),{Authorization:PEXELS_KEY});
+  return (j.photos||[]).map(function(p){return {t:p.src.medium,f:p.src.large2x||p.src.large,l:p.url}});
+ }
+ if(src==="pb"){
+  var d=await getJSON("https://pixabay.com/api/?key="+PIXABAY_KEY+"&image_type=photo&safesearch=true&per_page=30&page="+page+"&q="+enc(q));
+  return (d.hits||[]).map(function(h){return {t:h.webformatURL,f:h.largeImageURL||h.webformatURL,l:h.pageURL}});
+ }
+ if(src==="sb"){
+  var a=await getJSON("https://safebooru.donmai.us/posts.json?limit=24&page="+page+"&tags="+enc(q));
+  return a.filter(function(p){return p.large_file_url||p.file_url}).map(function(p){var u=p.large_file_url||p.file_url;return {t:u,f:u,l:"https://safebooru.donmai.us/posts/"+p.id}});
+ }
+ if(src==="ac"){
+  var b=await getJSON("https://api.artic.edu/api/v1/artworks/search?q="+enc(q)+"&query%5Bterm%5D%5Bis_public_domain%5D=true&fields=id,image_id&limit=24&page="+page);
+  return (b.data||[]).filter(function(x){return x.image_id}).map(function(x){var base="https://www.artic.edu/iiif/2/"+x.image_id+"/full/";return {t:base+"400,/0/default.jpg",f:base+"843,/0/default.jpg",l:"https://www.artic.edu/artworks/"+x.id}});
+ }
+ var w=await getJSON("https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=24&gsroffset="+((page-1)*24)+"&gsrsearch="+enc(q+" filetype:bitmap")+"&prop=imageinfo&iiprop=url&iiurlwidth=600&format=json&origin=*");
+ var pg=w.query?Object.keys(w.query.pages).map(function(k){return w.query.pages[k]}):[];
+ pg.sort(function(x,y){return x.index-y.index});
+ return pg.filter(function(x){return x.imageinfo&&x.imageinfo[0].thumburl}).map(function(x){var i=x.imageinfo[0];return {t:i.thumburl,f:i.thumburl,l:i.descriptionurl}});
+}
+
+/* ===== الواجهة ===== */
+function isFav(f){return S.fav.some(function(x){return x.f===f})}
+function toggleFav(it){if(isFav(it.f))S.fav=S.fav.filter(function(x){return x.f!==it.f});else S.fav.push(it);save()}
+var lbItem=null;
+function openLB(it){lbItem=it;$("lbimg").src=it.f;$("lblink").href=it.l;$("lbfav").textContent=isFav(it.f)?"★ محفوظة":"☆ حفظ";$("lb").hidden=false}
+$("lbx").onclick=function(){$("lb").hidden=true;if(tab==="favs")render()};
+$("lbfav").onclick=function(){toggleFav(lbItem);$("lbfav").textContent=isFav(lbItem.f)?"★ محفوظة":"☆ حفظ"};
+document.addEventListener("keydown",function(e){if(e.key==="Escape")$("lbx").click()});
+
+function wall(items,box){
+ items.forEach(function(it){
+  var b=el("button");b.type="button";var i=el("img");i.src=it.t;i.loading="lazy";i.alt="";i.onerror=function(){b.remove()};
+  b.appendChild(i);b.onclick=function(){openLB(it)};box.appendChild(b);
+ });
+}
+function addBox(title,ph,fn){
+ var b=el("div","add");b.appendChild(el("p",null,title));
+ var r=el("div","row"),i=el("input");i.placeholder=ph;
+ var g=el("button","btn","إضافة");g.type="button";
+ var go=function(){var v=i.value.trim();if(v)fn(v)};
+ g.onclick=go;i.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go()}});
+ r.appendChild(i);r.appendChild(g);b.appendChild(r);return b;
+}
+
+async function showResults(label,q,src,back){
+ var my=++token;res={label:label,back:back};
+ var v=$("view");v.innerHTML="";
+ var bk=el("button","back","‹ رجوع");bk.type="button";bk.onclick=back;v.appendChild(bk);
+ v.appendChild(el("h2",null,label));
+ var pn=el("p","note");var pa=el("a",null,"افتح نفس البحث في بنترست");pa.href=PIN+enc(q+" reference");pa.target="_blank";pa.rel="noopener noreferrer";pn.appendChild(pa);v.appendChild(pn);
+ var box=el("div","wall"),msg=el("p","msg","جاري تحميل الصور…"),more=el("button","btn more","عرض المزيد");more.type="button";more.hidden=true;
+ v.appendChild(box);v.appendChild(msg);v.appendChild(more);
+ var page=1;
+ async function go(){
+  more.hidden=true;msg.textContent="جاري تحميل الصور…";
+  try{
+   var items=await load(src,q,page);if(my!==token)return;
+   if(!items.length){msg.textContent=page===1?"ما لقيت صور لهذا البحث. جرب كلمة ثانية بالإنجليزي.":"خلصت النتائج.";return}
+   wall(items,box);msg.textContent="";page++;more.hidden=false;
+  }catch(e){if(my!==token)return;msg.textContent="ما قدرت أجيب الصور. تأكد من النت"+((src==="px"||src==="pb")?" ومن المفتاح":"")+"، وجرب مرة ثانية."}
+ }
+ more.onclick=go;go();window.scrollTo(0,0);
+}
+
+function render(){
+ token++;
+ $("t1").setAttribute("aria-pressed",tab==="cats");$("t2").setAttribute("aria-pressed",tab==="favs");
+ var v=$("view");v.innerHTML="";
+ if(tab==="favs"){
+  if(!S.fav.length){v.appendChild(el("p","msg","ما فيه صور محفوظة بعد. افتح أي صورة واضغط «حفظ»."));return}
+  var w=el("div","wall");wall(S.fav,w);v.appendChild(w);return;
+ }
+ var cats=allCats();
+ var c=cats.filter(function(x){return x.n===cur})[0];
+ if(!c){
+  cur=null;var g=el("div","grid");
+  cats.forEach(function(x){var b=el("button","cat",x.n);b.type="button";var s=el("small",null,x.d);if(x.src==="pin"){s.appendChild(document.createTextNode(" · "));s.appendChild(el("span","pin","بنترست"))}b.appendChild(s);b.onclick=function(){cur=x.n;render();window.scrollTo(0,0)};g.appendChild(b)});
+  v.appendChild(g);
+  v.appendChild(addBox("أضف تصنيف خاص فيك","اسم التصنيف، مثلاً: شخصيات ألعاب",function(n){
+   if(!cats.some(function(x){return x.n===n})){S.custom.push({n:n,s:[]});cur=n;save();render()}}));
+  return;
+ }
+ var bk=el("button","back","‹ رجوع للتصنيفات");bk.type="button";bk.onclick=function(){cur=null;render()};v.appendChild(bk);
+ v.appendChild(el("h2",null,c.n));
+ if(c.src==="pin")v.appendChild(el("div","pinbox","هذا التصنيف يفتح بنترست، لأنه أفضل مصدر لهذا النوع من الرسم."));
+ var w2=el("div","chips");
+ c.s.forEach(function(o,idx){
+  var s=srcOf(c,o),chip=el("div","chip");
+  if(s==="pin"){var a=el("a","pinl",o[0]+" ↗ بنترست");a.href=PIN+enc(o[1]);a.target="_blank";a.rel="noopener noreferrer";chip.appendChild(a)}
+  else{var m=el("button","m",o[0]);m.type="button";m.onclick=function(){showResults(o[0],o[1],s,render)};chip.appendChild(m)}
+  var custom=c.base<0||idx>=c.base;
+  if(custom){var d=el("button","x","✕");d.type="button";d.setAttribute("aria-label","حذف");d.onclick=function(){
+   if(c.base<0)S.custom.filter(function(x){return x.n===c.n})[0].s.splice(idx,1);else S.extra[c.n].splice(idx-c.base,1);save();render()};chip.appendChild(d)}
+  w2.appendChild(chip);
+ });
+ v.appendChild(w2);
+ v.appendChild(addBox("أضف خيار في "+c.n,"اكتب الاسم بالإنجليزي، مثلاً: Zoro",function(t){
+  var pair=[t,c.src==="pin"?t+" reference":t];
+  if(c.base>=0){(S.extra[c.n]=S.extra[c.n]||[]).push(pair)}else{S.custom.filter(function(x){return x.n===c.n})[0].s.push(pair)}
+  save();render()}));
+ if(c.base<0){var dl=el("button","del","حذف هذا التصنيف");dl.type="button";dl.onclick=function(){S.custom=S.custom.filter(function(x){return x.n!==c.n});cur=null;save();render()};v.appendChild(dl)}
+}
+function doSearch(){var t=$("q").value.trim();if(!t)return;tab="cats";$("t1").setAttribute("aria-pressed",true);$("t2").setAttribute("aria-pressed",false);showResults(t,t,stock(),render)}
+$("go").onclick=doSearch;
+$("q").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();doSearch()}});
+$("t1").onclick=function(){tab="cats";render()};
+$("t2").onclick=function(){tab="favs";render()};
+render();
+</script>
+</body>
+</html>
